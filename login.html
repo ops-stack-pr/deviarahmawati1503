@@ -15,15 +15,30 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 16px; /* FIX: prevents card from touching edges on mobile */
     }
 
     .card {
       background: #fff;
       border-radius: 16px;
       padding: 44px 36px 36px;
-      width: 340px;
+      width: 100%;           /* FIX: was fixed 340px — now fluid */
+      max-width: 380px;      /* FIX: caps at 380px on desktop */
       box-shadow: 0 4px 30px rgba(0,0,0,0.08);
     }
+
+    /* Logo/brand area */
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 28px;
+    }
+    .brand-dot {
+      width: 36px; height: 36px; background: #e8a020; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .brand-dot svg { width: 20px; height: 20px; }
+    .brand-name { font-size: .82rem; font-weight: 700; color: #555; line-height: 1.3; }
+    .brand-name span { display: block; font-size: 1rem; color: #1a1a1a; }
 
     h2 {
       font-size: 1.55rem;
@@ -52,6 +67,7 @@
 
     .field input {
       flex: 1;
+      min-width: 0; /* FIX: prevents text overflow on small screens */
       border: none;
       outline: none;
       font-family: 'Inter', sans-serif;
@@ -75,6 +91,14 @@
     }
     .forgot a:hover { text-decoration: underline; }
 
+    /* Error text under fields */
+    .err-msg {
+      font-size: .75rem; color: #e05050;
+      margin-top: -14px; margin-bottom: 14px;
+      display: none;
+    }
+    .err-msg.show { display: block; }
+
     .btn-masuk {
       width: 100%;
       padding: 14px;
@@ -88,9 +112,10 @@
       cursor: pointer;
       transition: background .2s, transform .1s;
       letter-spacing: .3px;
+      -webkit-tap-highlight-color: transparent; /* FIX: removes grey flash on mobile tap */
     }
-    .btn-masuk:hover { background: #d08a10; }
-    .btn-masuk:active { transform: scale(.98); }
+    .btn-masuk:hover  { background: #d08a10; }
+    .btn-masuk:active { transform: scale(.98); background: #b87a00; } /* FIX: tap feedback */
 
     .register-link {
       text-align: center;
@@ -105,6 +130,19 @@
     }
     .register-link a:hover { text-decoration: underline; }
 
+    /* Demo hint box */
+    .demo-box {
+      margin-top: 20px;
+      background: #fffbf0;
+      border: 1px solid #f0d080;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: .78rem;
+      color: #8a6000;
+      line-height: 1.7;
+    }
+    .demo-box strong { display: block; margin-bottom: 2px; color: #6a4800; }
+
     /* OVERLAY / MODAL */
     .overlay {
       position: fixed; inset: 0;
@@ -114,6 +152,7 @@
       align-items: center;
       justify-content: center;
       z-index: 99;
+      padding: 16px; /* FIX: modal doesn't touch edges on mobile */
     }
     .overlay.show { display: flex; }
 
@@ -121,7 +160,7 @@
       background: #fff;
       border-radius: 16px;
       padding: 36px 30px 28px;
-      width: 90%; max-width: 340px;
+      width: 100%; max-width: 340px; /* FIX: was width:90% max-width:340px — now fluid */
       position: relative;
       animation: pop .22s cubic-bezier(.34,1.56,.64,1);
       box-shadow: 0 10px 40px rgba(0,0,0,.15);
@@ -133,6 +172,8 @@
       position: absolute; top:12px; right:16px;
       background:none; border:none; font-size:1.3rem;
       color:#aaa; cursor:pointer; line-height:1;
+      width: 44px; height: 44px; /* FIX: touch target */
+      display: flex; align-items: center; justify-content: center;
     }
     .modal-close:hover { color:#333; }
 
@@ -166,14 +207,43 @@
       background:#e8a020; color:#fff;
       border:none; border-radius:9px;
       font-family:'Inter',sans-serif; font-size:.95rem; font-weight:600;
-      cursor:pointer; transition:background .2s;
+      cursor:pointer; transition:background .2s, transform .1s;
+      -webkit-tap-highlight-color: transparent;
     }
-    .btn-modal:hover { background:#d08a10; }
+    .btn-modal:hover  { background:#d08a10; }
+    .btn-modal:active { transform: scale(.98); }
+
+    /* Loading spinner on button */
+    .btn-masuk.loading {
+      background: #c8901a;
+      pointer-events: none;
+    }
+    .btn-masuk.loading::after {
+      content: '';
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
 <div class="card">
+  <div class="brand">
+    <div class="brand-dot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <div class="brand-name">Universitas Terbuka<span>SITTA</span></div>
+  </div>
+
   <h2>Selamat Datang</h2>
 
   <div class="field" id="field-email">
@@ -181,25 +251,34 @@
       <rect x="2" y="4" width="20" height="16" rx="2"/>
       <path d="M2 7l10 7 10-7"/>
     </svg>
-    <input type="email" id="email" placeholder="Email"/>
+    <input type="email" id="email" placeholder="Email" autocomplete="email"/>
   </div>
+  <div class="err-msg" id="err-email">Email tidak boleh kosong</div>
 
   <div class="field" id="field-pw">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="8" cy="15" r="4"/>
       <path d="M12 11l8-8M18 6l2 2M15 9l2 2"/>
     </svg>
-    <input type="password" id="password" placeholder="Password"/>
+    <input type="password" id="password" placeholder="Password" autocomplete="current-password"/>
   </div>
+  <div class="err-msg" id="err-pw">Password tidak boleh kosong</div>
 
   <div class="forgot">
     <a onclick="showModal('lupa')">Lupa password ?</a>
   </div>
 
-  <button class="btn-masuk" onclick="handleLogin()">Masuk</button>
+  <button class="btn-masuk" id="btnMasuk" onclick="handleLogin()">Masuk</button>
 
   <div class="register-link">
     <a onclick="showModal('daftar')">Belum punya akun?</a>
+  </div>
+
+  <!-- Demo hint -->
+  <div class="demo-box">
+    <strong>Akun Demo</strong>
+    Email: mahasiswa@ecampus.ut.ac.id<br/>
+    Password: password123
   </div>
 </div>
 
@@ -209,7 +288,7 @@
     <button class="modal-close" onclick="closeModal('error')">×</button>
     <div class="modal-icon">⚠️</div>
     <h3>Login Gagal</h3>
-    <p>Email/password yang anda masukkan salah.<br/>Silakan periksa kembali.</p>
+    <p>Email atau password yang Anda masukkan salah.<br/>Silakan periksa kembali.</p>
     <button class="btn-modal" onclick="closeModal('error')">Coba Lagi</button>
   </div>
 </div>
@@ -253,36 +332,65 @@
 </div>
 
 <script>
+  /* ── DEMO ACCOUNTS ── */
+  var ACCOUNTS = [
+    { email: 'mahasiswa@ecampus.ut.ac.id', password: 'password123', redirect: 'dashboard.html' },
+    { email: 'admin@ecampus.ut.ac.id',     password: 'admin123',    redirect: 'dashboard.html' }
+  ];
+
   function handleLogin() {
-    const email = document.getElementById('email').value.trim();
-    const pw    = document.getElementById('password').value.trim();
-    const fe    = document.getElementById('field-email');
-    const fp    = document.getElementById('field-pw');
+    var email = document.getElementById('email').value.trim().toLowerCase();
+    var pw    = document.getElementById('password').value;
+    var fe    = document.getElementById('field-email');
+    var fp    = document.getElementById('field-pw');
+    var ee    = document.getElementById('err-email');
+    var ep    = document.getElementById('err-pw');
+    var btn   = document.getElementById('btnMasuk');
 
-    fe.classList.remove('error');
-    fp.classList.remove('error');
+    /* reset states */
+    fe.classList.remove('error'); fp.classList.remove('error');
+    ee.classList.remove('show');  ep.classList.remove('show');
 
-    if (!email || !pw) {
-      if (!email) fe.classList.add('error');
-      if (!pw)    fp.classList.add('error');
-      showModal('error');
-      return;
-    }
+    var valid = true;
+    if (!email) { fe.classList.add('error'); ee.textContent = 'Email tidak boleh kosong'; ee.classList.add('show'); valid = false; }
+    if (!pw)    { fp.classList.add('error'); ep.textContent = 'Password tidak boleh kosong'; ep.classList.add('show'); valid = false; }
+    if (!valid) return;
 
-    if (email !== 'mahasiswa@ecampus.ut.ac.id' || pw !== 'password123') {
-      fe.classList.add('error');
-      fp.classList.add('error');
-      showModal('error');
-    } else {
-      alert('Login berhasil! Selamat datang.');
-    }
+    /* show loading */
+    btn.classList.add('loading');
+    btn.textContent = 'Memuat';
+
+    /* FIX: simulate brief auth delay then redirect */
+    setTimeout(function() {
+      var match = ACCOUNTS.find(function(a) {
+        return a.email === email && a.password === pw;
+      });
+
+      if (match) {
+        /* ✅ BUG FIX: was only alert() — now actually redirects */
+        window.location.href = match.redirect;
+      } else {
+        btn.classList.remove('loading');
+        btn.textContent = 'Masuk';
+        fe.classList.add('error');
+        fp.classList.add('error');
+        ep.textContent = 'Email atau password salah';
+        ep.classList.add('show');
+        showModal('error');
+      }
+    }, 800);
   }
+
+  /* Allow Enter key to submit */
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') handleLogin();
+  });
 
   function showModal(t)  { document.getElementById('modal-'+t).classList.add('show'); }
   function closeModal(t) { document.getElementById('modal-'+t).classList.remove('show'); }
 
-  document.querySelectorAll('.overlay').forEach(o => {
-    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+  document.querySelectorAll('.overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('show'); });
   });
 </script>
 </body>
