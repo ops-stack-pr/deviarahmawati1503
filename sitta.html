@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SITTA – Universitas Terbuka</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ══════════════════════════════════════════
+       PAGE ROUTER – hanya satu halaman aktif
+    ══════════════════════════════════════════ */
+    .page { display: none; min-height: 100vh; }
+    .page.active { display: block; }
+    #page-login.active { display: flex; }
+
+    /* ══════════════════════════════════════════
+       ① LOGIN PAGE
+    ══════════════════════════════════════════ */
+    #page-login {
+      background: #f5f5f5;
+      font-family: 'Inter', sans-serif;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 44px 36px 36px;
+      width: 340px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    }
+    .login-card h2 {
+      font-size: 1.55rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px;
+    }
+    .login-card .login-sub {
+      font-size: .82rem; color: #888; margin-bottom: 28px;
+    }
+    .field {
+      display: flex; align-items: center;
+      border-bottom: 1.5px solid #ddd;
+      padding: 8px 0; margin-bottom: 20px;
+      transition: border-color .2s;
+    }
+    .field:focus-within { border-color: #e8a020; }
+    .field.error { border-color: #e05050; }
+    .field svg { width: 18px; height: 18px; color: #bbb; flex-shrink: 0; margin-right: 12px; }
+    .field input {
+      flex: 1; border: none; outline: none;
+      font-family: 'Inter', sans-serif; font-size: .95rem;
+      color: #333; background: transparent;
+    }
+    .field input::placeholder { color: #bbb; }
+    .forgot { text-align: right; margin-bottom: 28px; margin-top: -8px; }
+    .forgot a { font-size: .82rem; color: #e8a020; text-decoration: none; font-weight: 500; cursor: pointer; }
+    .forgot a:hover { text-decoration: underline; }
+    .btn-masuk {
+      width: 100%; padding: 14px;
+      background: #e8a020; color: #fff; border: none;
+      border-radius: 10px; font-family: 'Inter', sans-serif;
+      font-size: 1rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    .btn-masuk:hover { background: #d08a10; }
+    .btn-masuk:active { transform: scale(.98); }
+    .demo-hint {
+      margin-top: 16px; padding: 10px 14px;
+      background: #fff8ec; border: 1px solid #fde68a;
+      border-radius: 8px; font-size: .78rem; color: #92400e; line-height: 1.6;
+    }
+
+    /* ── Overlay / Modal (login) ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35); backdrop-filter: blur(3px);
+      display: none; align-items: center; justify-content: center; z-index: 999;
+    }
+    .overlay.show { display: flex; }
+    .modal {
+      background: #fff; border-radius: 16px;
+      padding: 36px 30px 28px; width: 90%; max-width: 340px;
+      position: relative; text-align: center;
+      animation: pop .22s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 10px 40px rgba(0,0,0,.15);
+    }
+    @keyframes pop { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
+    .modal-close {
+      position: absolute; top:12px; right:16px;
+      background:none; border:none; font-size:1.3rem; color:#aaa; cursor:pointer;
+    }
+    .modal-close:hover { color:#333; }
+    .modal-icon { font-size: 2.2rem; margin-bottom: 12px; }
+    .modal h3 { font-size: 1.1rem; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+    .modal p  { font-size: .85rem; color: #888; line-height: 1.6; margin-bottom: 22px; }
+    .modal-field { text-align: left; margin-bottom: 14px; }
+    .modal-field label {
+      display:block; font-size:.75rem; font-weight:600; color:#555;
+      text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px;
+    }
+    .modal-field input {
+      width:100%; padding:10px 12px;
+      border: 1.5px solid #ddd; border-radius:8px;
+      font-family:'Inter',sans-serif; font-size:.9rem; color:#333; outline:none;
+      transition: border-color .2s;
+    }
+    .modal-field input:focus { border-color:#e8a020; }
+    .btn-modal {
+      width:100%; padding:12px; background:#e8a020; color:#fff;
+      border:none; border-radius:9px; font-family:'Inter',sans-serif;
+      font-size:.95rem; font-weight:600; cursor:pointer; transition:background .2s;
+    }
+    .btn-modal:hover { background:#d08a10; }
+
+    /* ══════════════════════════════════════════
+       SHARED TOPBAR + SIDEBAR (dashboard, stock, tracking)
+    ══════════════════════════════════════════ */
+    :root {
+      --blue:    #1a6fc4;
+      --blue-dk: #1558a0;
+      --blue-lt: #2d87d8;
+      --bg:      #f0f2f5;
+      --white:   #ffffff;
+      --border:  #e0e4ea;
+      --dark:    #1a1a2e;
+      --mid:     #555e6d;
+      --light:   #f7f8fa;
+    }
+
+    .app-shell { display: flex; flex-direction: column; min-height: 100vh; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--dark); }
+
+    .topbar {
+      background: var(--white); border-bottom: 1px solid var(--border);
+      padding: 0 32px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+    }
+    .topbar-brand { display: flex; align-items: center; gap: 10px; font-size: .95rem; font-weight: 700; color: var(--blue); }
+    .topbar-brand .dot { width: 30px; height: 30px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .topbar-brand .dot svg { width: 18px; height: 18px; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; }
+    .time-badge { font-size: .78rem; color: var(--mid); background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700; cursor: pointer; }
+
+    .layout { display: flex; flex: 1; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px; background: var(--white);
+      border-right: 1px solid var(--border);
+      padding: 20px 12px; flex-shrink: 0;
+    }
+    .nav-label {
+      font-size: .65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: #aab; padding: 0 10px; margin: 16px 0 6px;
+    }
+    .nav-label:first-child { margin-top: 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 12px; border-radius: 8px;
+      font-size: .85rem; font-weight: 500; color: var(--mid);
+      cursor: pointer; transition: all .15s;
+      position: relative; user-select: none;
+    }
+    .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .nav-item:hover { background: #eaf2fc; color: var(--blue); }
+    .nav-item.active { background: #daeafa; color: var(--blue-dk); font-weight: 600; }
+    .nav-item.active::before {
+      content: ''; position: absolute; left: 0; top: 25%; bottom: 25%;
+      width: 3px; border-radius: 2px; background: var(--blue);
+    }
+    .chevron { margin-left: auto; transition: transform .2s; }
+    .chevron.open { transform: rotate(180deg); }
+    .sub-menu { display: none; flex-direction: column; gap: 2px; padding-left: 34px; margin-top: 2px; }
+    .sub-menu.open { display: flex; }
+    .sub-item { padding: 7px 10px; border-radius: 7px; font-size: .81rem; color: var(--mid); cursor: pointer; transition: all .15s; }
+    .sub-item:hover { background: #eaf2fc; color: var(--blue); }
+    .sub-item.active { color: var(--blue-dk); font-weight: 600; }
+
+    /* MAIN AREA */
+    .main-content { flex: 1; padding: 28px 32px; overflow-y: auto; }
+
+    /* ══════════════════════════════════════════
+       ② DASHBOARD PAGE
+    ══════════════════════════════════════════ */
+    .hero-banner {
+      background: linear-gradient(135deg, #1a6fc4 0%, #2d9fd8 60%, #1a8fc4 100%);
+      border-radius: 16px; padding: 32px 36px;
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; position: relative; overflow: hidden;
+      animation: fadeUp .4s ease both;
+    }
+    .hero-banner::before {
+      content: ''; position: absolute; top: -40px; right: 200px;
+      width: 200px; height: 200px; border-radius: 50%; background: rgba(255,255,255,0.07);
+    }
+    .hero-banner::after {
+      content: ''; position: absolute; bottom: -60px; left: 40%;
+      width: 260px; height: 260px; border-radius: 50%; background: rgba(255,255,255,0.05);
+    }
+    .hero-left { z-index: 1; }
+    .hero-tag {
+      display: inline-block; background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.3); border-radius: 20px;
+      font-size: .72rem; font-weight: 600; color: #fff;
+      padding: 4px 14px; letter-spacing: .5px; margin-bottom: 14px;
+    }
+    .hero-banner h1 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem); font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 6px;
+    }
+    .hero-banner p { font-size: .88rem; color: rgba(255,255,255,0.75); }
+    .hero-stat {
+      z-index: 1; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 14px; padding: 20px 28px; text-align: center; backdrop-filter: blur(8px); flex-shrink: 0;
+    }
+    .hero-stat .num { font-size: 2.4rem; font-weight: 800; color: #fff; line-height: 1; }
+    .hero-stat .lbl { font-size: .78rem; color: rgba(255,255,255,0.8); margin-top: 4px; font-weight: 500; }
+
+    .cards-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 28px; }
+    .menu-card {
+      background: var(--white); border: 1px solid var(--border); border-radius: 14px;
+      padding: 28px 24px; display: flex; flex-direction: column; gap: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.04); animation: fadeUp .4s ease both;
+      transition: box-shadow .2s, transform .15s; cursor: pointer;
+    }
+    .menu-card:hover { box-shadow: 0 6px 22px rgba(26,111,196,0.12); transform: translateY(-3px); }
+    .menu-card:nth-child(2) { animation-delay: .07s; }
+    .menu-card:nth-child(3) { animation-delay: .14s; }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: #eaf2fc; display: flex; align-items: center; justify-content: center;
+    }
+    .card-icon svg { width: 22px; height: 22px; color: var(--blue); }
+    .menu-card h3 { font-size: .95rem; font-weight: 700; color: var(--dark); }
+    .menu-card p  { font-size: .82rem; color: var(--mid); line-height: 1.5; flex: 1; }
+    .btn-blue {
+      background: var(--blue); color: #fff; border: none; border-radius: 9px;
+      padding: 9px 18px; font-family: 'Inter', sans-serif;
+      font-size: .83rem; font-weight: 600; cursor: pointer; align-self: flex-start;
+      transition: background .2s;
+    }
+    .btn-blue:hover { background: var(--blue-dk); }
+
+    .laporan-box {
+      background: var(--white); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+      animation: fadeUp .4s ease .21s both;
+    }
+    .laporan-box h2 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .sub-desc { font-size: .83rem; color: var(--mid); margin-bottom: 8px; }
+    .empty { font-size: .82rem; color: #aab; font-style: italic; }
+
+    .laporan-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 22px; }
+    .tab-btn {
+      padding: 7px 18px; border-radius: 20px; font-family: 'Inter', sans-serif;
+      font-size: .82rem; font-weight: 600; border: 1.5px solid var(--border);
+      background: var(--light); color: var(--mid); cursor: pointer; transition: all .15s;
+    }
+    .tab-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .tab-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
+    .tab-content { display: none; }
+    .tab-content.show { display: block; animation: fadeUp .25s ease; }
+
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      padding: 10px 16px; text-align: left; font-size: .71rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .8px; color: #99a; background: var(--light);
+    }
+    tbody tr { border-top: 1px solid var(--border); transition: background .12s; }
+    tbody tr:hover { background: #f0f7ff; }
+    tbody td { padding: 11px 16px; font-size: .84rem; color: var(--mid); }
+    tbody td:first-child { color: var(--dark); font-weight: 500; }
+    .badge-green { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .71rem; font-weight: 700; background: #e4f5ec; color: #1a7a45; }
+    .badge-blue  { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .71rem; font-weight: 700; background: #daeafa; color: #155fa0; }
+    .badge-gray  { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .71rem; font-weight: 700; background: #f0f0f5; color: #778; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ══════════════════════════════════════════
+       ③ STOK PAGE
+    ══════════════════════════════════════════ */
+    .stock-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 22px;
+    }
+    .stock-card {
+      background: #fff; border-radius: 12px; overflow: hidden;
+      display: flex; box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+      transition: transform .3s ease; border: 1px solid #eee;
+    }
+    .stock-card:hover { transform: translateY(-8px); }
+    .card-image { width: 120px; min-width: 120px; height: 170px; background: #dbeafe; display: flex; align-items: center; justify-content: center; }
+    .card-image img { width: 100%; height: 100%; object-fit: cover; }
+    .card-image .img-placeholder { font-size: 2.5rem; }
+    .card-body { padding: 14px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+    .badge-loc { background: #1a2a6c; color: white; font-size: 10px; padding: 3px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
+    .bk-title { font-size: 15px; font-weight: 700; margin: 0 0 4px; color: #1a2a6c; line-height: 1.3; }
+    .bk-code { font-size: 12px; color: #777; font-weight: 600; }
+    .bk-info { font-size: 11px; margin-top: 4px; color: #555; }
+    .stock-footer { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; display: flex; justify-content: space-between; align-items: center; }
+    .stock-count { font-size: 17px; font-weight: 800; color: #28a745; }
+    .edition-tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 3px; }
+
+    .stock-header { margin-bottom: 24px; }
+    .stock-header h2 { font-size: 1.3rem; font-weight: 800; color: var(--dark); }
+    .stock-header p { font-size: .84rem; color: var(--mid); margin-top: 4px; }
+
+    /* ══════════════════════════════════════════
+       ④ TRACKING PAGE
+    ══════════════════════════════════════════ */
+    .tracking-wrap { max-width: 680px; }
+    .tracking-hero {
+      background: linear-gradient(135deg, #1a3a6e 0%, #2563eb 60%, #60a5fa 100%);
+      border-radius: 16px; padding: 32px 36px; margin-bottom: 24px;
+      position: relative; overflow: hidden;
+    }
+    .tracking-hero .hero-eyebrow {
+      display: inline-block; background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25); color: #fff;
+      font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px; margin-bottom: 14px;
+    }
+    .tracking-hero h2 { font-size: clamp(20px,4vw,30px); font-weight: 800; color: #fff; line-height: 1.2; margin-bottom: 8px; }
+    .tracking-hero p  { font-size: 13px; color: rgba(255,255,255,.75); }
+
+    .search-card {
+      background: #fff; border-radius: 16px; padding: 24px;
+      box-shadow: 0 4px 24px rgba(37,99,235,.1); margin-bottom: 20px;
+    }
+    .search-card h3 {
+      font-size: 11px; font-weight: 600; color: #2563eb;
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 12px;
+    }
+    .input-group { display: flex; gap: 10px; }
+    .input-wrap { flex: 1; position: relative; }
+    .input-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+    .input-wrap input {
+      width: 100%; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #0a1628;
+      padding: 13px 16px 13px 42px; outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); background: #fff; }
+    .input-wrap input::placeholder { color: #94a3b8; }
+    .btn-lacak {
+      background: linear-gradient(135deg, #2563eb, #1a3a6e); color: #fff;
+      border: none; border-radius: 10px; font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700; font-size: 14px; padding: 13px 24px; cursor: pointer;
+      box-shadow: 0 4px 12px rgba(37,99,235,.35); transition: all .2s; white-space: nowrap;
+    }
+    .btn-lacak:hover { box-shadow: 0 6px 20px rgba(37,99,235,.5); transform: translateY(-1px); }
+    .quick-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .quick-lbl { font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+      background: #eff6ff; border: 1.5px solid #dbeafe; border-radius: 20px;
+      padding: 4px 12px; color: #2563eb; cursor: pointer; transition: all .2s;
+    }
+    .chip:hover { background: #2563eb; border-color: #2563eb; color: #fff; }
+    .error-box {
+      display: none; background: #fef2f2; border: 1.5px solid #fecaca;
+      border-radius: 10px; padding: 11px 16px; color: #dc2626;
+      font-size: 13px; margin-top: 12px; font-weight: 500;
+    }
+
+    .result-card {
+      display: none; background: #fff; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(37,99,235,.1); overflow: hidden;
+      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn { from{opacity:0;transform:scale(.97) translateY(12px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    .result-stripe {
+      background: linear-gradient(135deg,#1a3a6e,#2563eb);
+      padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .do-lbl { font-size: 10px; color: rgba(255,255,255,.6); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+    .do-num { font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; color:#fff; }
+    .tr-badge { display:flex; align-items:center; gap:6px; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700; }
+    .badge-warn-tr { background:#fef3c7; color:#d97706; }
+    .badge-ok-tr   { background:#dcfce7; color:#16a34a; }
+    .badge-dot { width:7px; height:7px; border-radius:50%; }
+    .badge-warn-tr .badge-dot { background:#d97706; animation: blink .8s infinite; }
+    .badge-ok-tr   .badge-dot { background:#16a34a; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+    .info-row { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid #f1f5f9; }
+    .info-cell { padding: 16px 20px; border-right: 1px solid #f1f5f9; }
+    .info-cell:last-child { border-right: none; }
+    .ic-lbl { font-size: 10px; font-weight: 600; color: #3b82f6; text-transform: uppercase; letter-spacing: 1px; font-family:'JetBrains Mono',monospace; margin-bottom: 4px; }
+    .ic-val { font-size: 13px; font-weight: 600; color: #0f2040; }
+    .tl-wrap { padding: 22px 24px; }
+    .tl-head {
+      font-size: 11px; font-weight: 600; color: #3b82f6;
+      font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:1px;
+      margin-bottom: 20px; display:flex; align-items:center; gap:10px;
+    }
+    .tl-head::after { content:''; flex:1; height:1px; background: linear-gradient(to right, #dbeafe, transparent); }
+    .timeline { position:relative; padding-left:32px; }
+    .timeline::before { content:''; position:absolute; left:9px; top:12px; bottom:12px; width:2px; background: linear-gradient(to bottom,#3b82f6,#dbeafe); border-radius:2px; }
+    .tl-item { position:relative; margin-bottom:20px; animation: fadeSlide .35s ease both; }
+    .tl-item:last-child { margin-bottom:0; }
+    .tl-dot { position:absolute; left:-32px; top:2px; width:20px; height:20px; border-radius:50%; background:#fff; border:2px solid #e2e8f0; display:flex; align-items:center; justify-content:center; }
+    .tl-dot-inner { width:8px; height:8px; border-radius:50%; background:#e2e8f0; }
+    .tl-item:first-child .tl-dot { border-color:#3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
+    .tl-item:first-child .tl-dot-inner { background:#3b82f6; }
+    .tl-time { font-family:'JetBrains Mono',monospace; font-size:11px; color:#60a5fa; margin-bottom:3px; }
+    .tl-desc { font-size:13px; font-weight:500; color:#0f2040; line-height:1.5; }
+    .tl-item:first-child .tl-desc { color:#1e4d9b; font-weight:700; }
+    @keyframes fadeSlide { from{opacity:0;transform:translateX(-10px)} to{opacity:1;transform:translateX(0)} }
+    .tl-item:nth-child(1){animation-delay:.04s} .tl-item:nth-child(2){animation-delay:.10s}
+    .tl-item:nth-child(3){animation-delay:.17s} .tl-item:nth-child(4){animation-delay:.24s}
+    .tl-item:nth-child(5){animation-delay:.31s} .tl-item:nth-child(6){animation-delay:.38s}
+    .result-footer {
+      background:#eff6ff; border-top:1.5px solid #dbeafe;
+      padding:14px 24px; display:flex; align-items:center;
+      justify-content:space-between; flex-wrap:wrap; gap:8px;
+    }
+    .paket-info { font-family:'JetBrains Mono',monospace; font-size:12px; color:#1e4d9b; font-weight:600; }
+    .paket-info span { color:#94a3b8; font-weight:400; margin-right:6px; }
+    .total-info { font-size:15px; font-weight:800; color:#1a3a6e; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .sidebar { display: none; }
+      .main-content { padding: 18px 14px; }
+    }
+    @media (max-width: 600px) {
+      .hero-banner { flex-direction: column; gap: 20px; }
+      .hero-stat { width: 100%; }
+      .info-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .stock-card { flex-direction: column; }
+      .card-image { width: 100%; height: 180px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     ① PAGE: LOGIN
+════════════════════════════════════ -->
+<div id="page-login" class="page active">
+  <div class="login-card">
+    <h2>Selamat Datang</h2>
+    <p class="login-sub">SITTA – Universitas Terbuka</p>
+
+    <div class="field" id="field-email">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 7l10 7 10-7"/>
+      </svg>
+      <input type="email" id="login-email" placeholder="Email"/>
+    </div>
+
+    <div class="field" id="field-pw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="8" cy="15" r="4"/><path d="M12 11l8-8M18 6l2 2M15 9l2 2"/>
+      </svg>
+      <input type="password" id="login-pw" placeholder="Password"/>
+    </div>
+
+    <div class="forgot">
+      <a onclick="showModal('lupa')">Lupa password?</a>
+    </div>
+
+    <button class="btn-masuk" onclick="handleLogin()">Masuk</button>
+
+    <div class="demo-hint">
+      <strong>Demo:</strong><br>
+      Email: <code>mahasiswa@ecampus.ut.ac.id</code><br>
+      Password: <code>password123</code>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════
+     ② PAGE: DASHBOARD
+════════════════════════════════════ -->
+<div id="page-dashboard" class="page">
+  <div class="app-shell">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-brand">
+        <div class="dot">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        SITTA – Universitas Terbuka
+      </div>
+      <div class="topbar-right">
+        <div class="time-badge" id="clockBadge">--:--</div>
+        <div class="avatar" title="Akun">A</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="nav-label">Menu Utama</div>
+
+        <div class="nav-item active" onclick="sidebarActive(this); showSection('sec-dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+          Dashboard
+        </div>
+
+        <div class="nav-item" onclick="sidebarActive(this); showSection('sec-stok')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+          </svg>
+          Informasi Bahan Ajar
+        </div>
+
+        <div class="nav-item" onclick="sidebarActive(this); showSection('sec-tracking')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+          </svg>
+          Tracking Pengiriman
+        </div>
+
+        <div class="nav-item" onclick="toggleSub(this,'sub-laporan')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/>
+          </svg>
+          Laporan
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+        <div class="sub-menu" id="sub-laporan">
+          <div class="sub-item" onclick="showSection('sec-dashboard'); openLaporan('monitoring')">Monitoring Progress DO</div>
+          <div class="sub-item" onclick="showSection('sec-dashboard'); openLaporan('rekap')">Rekap Bahan Ajar</div>
+        </div>
+
+        <div class="nav-item" onclick="sidebarActive(this); showSection('sec-dashboard'); openLaporan('histori')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="12 8 12 12 14 14"/>
+            <path d="M3.05 11a9 9 0 1 0 .5-4.5"/><polyline points="3 3 3 7 7 7"/>
+          </svg>
+          Histori Transaksi
+        </div>
+
+        <div class="nav-label">Akun</div>
+        <div class="nav-item" onclick="sidebarActive(this)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          Profil Saya
+        </div>
+        <div class="nav-item" onclick="doLogout()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Keluar
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <main class="main-content">
+
+        <!-- SECTION: DASHBOARD -->
+        <div id="sec-dashboard" class="section">
+          <div class="hero-banner">
+            <div class="hero-left">
+              <div class="hero-tag">Dashboard Aplikasi SITTA</div>
+              <h1 id="heroGreeting">Selamat Datang, Admin SITTA</h1>
+              <p>Login sebagai Administrator – Pusat</p>
+            </div>
+            <div class="hero-stat">
+              <div class="num">1.587</div>
+              <div class="lbl">Total Stok</div>
+            </div>
+          </div>
+
+          <div class="cards-grid">
+            <div class="menu-card" onclick="showSection('sec-stok'); sidebarNav('Informasi Bahan Ajar')">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+              </div>
+              <h3>Informasi Bahan Ajar</h3>
+              <p>Lihat daftar bahan ajar, stok, edisi, dan cover modul.</p>
+              <button class="btn-blue">Buka Stok</button>
+            </div>
+            <div class="menu-card" onclick="showSection('sec-tracking'); sidebarNav('Tracking Pengiriman')">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+              </div>
+              <h3>Tracking Pengiriman</h3>
+              <p>Cari status pengiriman berdasarkan Nomor Delivery Order.</p>
+              <button class="btn-blue">Cari DO</button>
+            </div>
+            <div class="menu-card" onclick="openLaporan('monitoring')">
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+              </div>
+              <h3>Laporan</h3>
+              <p>Monitoring progress DO, rekap bahan ajar, dan histori transaksi.</p>
+              <button class="btn-blue">Lihat Laporan</button>
+            </div>
+          </div>
+
+          <!-- AREA LAPORAN -->
+          <div class="laporan-box">
+            <h2>Area Laporan</h2>
+            <div id="laporanEmpty">
+              <p class="sub-desc">Pilih menu laporan pada navigasi atau klik tombol di atas.</p>
+              <p class="empty">Belum ada laporan yang dipilih.</p>
+            </div>
+            <div id="laporanContent" style="display:none">
+              <div class="laporan-tabs">
+                <button class="tab-btn active" onclick="switchTab(this,'tab-monitoring')">Monitoring Progress DO</button>
+                <button class="tab-btn" onclick="switchTab(this,'tab-rekap')">Rekap Bahan Ajar</button>
+                <button class="tab-btn" onclick="switchTab(this,'tab-histori')">Histori Transaksi</button>
+              </div>
+
+              <!-- TAB: MONITORING -->
+              <div id="tab-monitoring" class="tab-content show">
+                <div class="tbl-wrap">
+                  <table>
+                    <thead><tr><th>No DO</th><th>Penerima</th><th>Tujuan</th><th>Ekspedisi</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr><td>2023001234</td><td>Rina Wulandari</td><td>Jakarta Selatan</td><td>JNE</td><td><span class="badge-blue">Dalam Perjalanan</span></td></tr>
+                      <tr><td>2023005678</td><td>Agus Pranoto</td><td>Bandung</td><td>Pos Indonesia</td><td><span class="badge-green">Dikirim</span></td></tr>
+                      <tr><td>2023009012</td><td>Dewi Kusuma</td><td>Surabaya</td><td>TIKI</td><td><span class="badge-gray">Menunggu</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TAB: REKAP -->
+              <div id="tab-rekap" class="tab-content">
+                <div class="tbl-wrap">
+                  <table>
+                    <thead><tr><th>Kode</th><th>Judul</th><th>Edisi</th><th>Stok</th><th>Lokasi</th></tr></thead>
+                    <tbody>
+                      <tr><td>ASIP4301</td><td>Pengantar Ilmu Komunikasi</td><td>2</td><td>548</td><td>0TMP01</td></tr>
+                      <tr><td>EKMA4216</td><td>Manajemen Keuangan</td><td>3</td><td>392</td><td>0JKT01</td></tr>
+                      <tr><td>BIOL4211</td><td>Mikrobiologi Dasar</td><td>2</td><td>165</td><td>0MLG01</td></tr>
+                      <tr><td>PAUD4401</td><td>Perkembangan Anak Usia Dini</td><td>4</td><td>204</td><td>0UPBJJBDG</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- TAB: HISTORI -->
+              <div id="tab-histori" class="tab-content">
+                <div class="tbl-wrap">
+                  <table>
+                    <thead><tr><th>Tanggal</th><th>No DO</th><th>Bahan Ajar</th><th>Qty</th><th>Status</th></tr></thead>
+                    <tbody>
+                      <tr><td>25 Agu 2025</td><td>2023001234</td><td>Manajemen Keuangan</td><td>12</td><td><span class="badge-green">Selesai</span></td></tr>
+                      <tr><td>25 Agu 2025</td><td>2023005678</td><td>Pengantar Ilmu Komunikasi</td><td>8</td><td><span class="badge-green">Selesai</span></td></tr>
+                      <tr><td>26 Agu 2025</td><td>2023009012</td><td>Mikrobiologi Dasar</td><td>5</td><td><span class="badge-gray">Proses</span></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!-- /sec-dashboard -->
+
+        <!-- SECTION: STOK -->
+        <div id="sec-stok" class="section" style="display:none">
+          <div class="stock-header">
+            <h2>Informasi Bahan Ajar</h2>
+            <p>Inventori Bahan Ajar – Universitas Terbuka</p>
+          </div>
+          <div class="stock-grid">
+
+            <div class="stock-card">
+              <div class="card-image">
+                <img src="img/pengantar ilmu komunikasi.jpeg" alt="ASIP4301"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="img-placeholder" style="display:none">📘</div>
+              </div>
+              <div class="card-body">
+                <div>
+                  <span class="badge-loc">LOKASI: 0TMP01</span>
+                  <h2 class="bk-title">Pengantar Ilmu Komunikasi</h2>
+                  <div class="bk-code">Kode: ASIP4301</div>
+                  <div class="bk-info">Jenis: BMP | Edisi: 2</div>
+                </div>
+                <div class="stock-footer">
+                  <span class="edition-tag">Edisi Terbaru</span>
+                  <span class="stock-count">Stok: 548</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stock-card">
+              <div class="card-image">
+                <img src="img/manajemen keuangan.jpeg" alt="EKMA4216"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="img-placeholder" style="display:none">📗</div>
+              </div>
+              <div class="card-body">
+                <div>
+                  <span class="badge-loc">LOKASI: 0JKT01</span>
+                  <h2 class="bk-title">Manajemen Keuangan</h2>
+                  <div class="bk-code">Kode: EKMA4216</div>
+                  <div class="bk-info">Jenis: BMP | Edisi: 3</div>
+                </div>
+                <div class="stock-footer">
+                  <span class="edition-tag">Edisi Terbaru</span>
+                  <span class="stock-count">Stok: 392</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stock-card">
+              <div class="card-image">
+                <img src="img/mikrobiologi.jpeg" alt="BIOL4211"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="img-placeholder" style="display:none">🔬</div>
+              </div>
+              <div class="card-body">
+                <div>
+                  <span class="badge-loc">LOKASI: 0MLG01</span>
+                  <h2 class="bk-title">Mikrobiologi Dasar</h2>
+                  <div class="bk-code">Kode: BIOL4211</div>
+                  <div class="bk-info">Jenis: BMP | Edisi: 2</div>
+                </div>
+                <div class="stock-footer">
+                  <span class="edition-tag">Edisi Terbaru</span>
+                  <span class="stock-count">Stok: 165</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stock-card">
+              <div class="card-image">
+                <img src="img/perkembangan dan konsep dasar pengem....jpeg" alt="PAUD4401"
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                <div class="img-placeholder" style="display:none">👶</div>
+              </div>
+              <div class="card-body">
+                <div>
+                  <span class="badge-loc">LOKASI: 0UPBJJBDG</span>
+                  <h2 class="bk-title">Perkembangan Anak Usia Dini</h2>
+                  <div class="bk-code">Kode: PAUD4401</div>
+                  <div class="bk-info">Jenis: BMP | Edisi: 4</div>
+                </div>
+                <div class="stock-footer">
+                  <span class="edition-tag">Edisi Terbaru</span>
+                  <span class="stock-count">Stok: 204</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div><!-- /sec-stok -->
+
+        <!-- SECTION: TRACKING -->
+        <div id="sec-tracking" class="section" style="display:none">
+          <div class="tracking-wrap">
+            <div class="tracking-hero">
+              <div class="hero-eyebrow">Tracking Pengiriman</div>
+              <h2>Lacak Paket Bahan Ajar<br>Secara Real-Time</h2>
+              <p>Masukkan nomor Delivery Order untuk melihat status pengiriman.</p>
+            </div>
+
+            <div class="search-card">
+              <h3>Nomor Delivery Order</h3>
+              <div class="input-group">
+                <div class="input-wrap">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                  <input type="text" id="inputDO" placeholder="Contoh: 2023001234"
+                         onkeydown="if(event.key==='Enter') cariTracking()"/>
+                </div>
+                <button class="btn-lacak" onclick="cariTracking()">Lacak</button>
+              </div>
+              <div class="quick-row">
+                <span class="quick-lbl">Coba:</span>
+                <span class="chip" onclick="fillAndSearch('2023001234')">2023001234</span>
+                <span class="chip" onclick="fillAndSearch('2023005678')">2023005678</span>
+              </div>
+              <div class="error-box" id="errorBox"></div>
+            </div>
+
+            <div class="result-card" id="resultCard"></div>
+          </div>
+        </div><!-- /sec-tracking -->
+
+      </main>
+    </div><!-- /layout -->
+  </div><!-- /app-shell -->
+</div><!-- /page-dashboard -->
+
+<!-- MODALS -->
+<div class="overlay" id="modal-error">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('error')">×</button>
+    <div class="modal-icon">⚠️</div>
+    <h3>Login Gagal</h3>
+    <p>Email/password yang Anda masukkan salah.<br/>Silakan periksa kembali.</p>
+    <button class="btn-modal" onclick="closeModal('error')">Coba Lagi</button>
+  </div>
+</div>
+
+<div class="overlay" id="modal-lupa">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('lupa')">×</button>
+    <div class="modal-icon">🔑</div>
+    <h3>Lupa Password</h3>
+    <p>Masukkan email terdaftar Anda untuk menerima tautan reset password.</p>
+    <div class="modal-field">
+      <label>Email</label>
+      <input type="email" placeholder="email@ecampus.ut.ac.id"/>
+    </div>
+    <button class="btn-modal" onclick="closeModal('lupa')">Kirim Tautan Reset</button>
+  </div>
+</div>
+
+<script>
+/* ── PAGE ROUTER ── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ── LOGIN ── */
+function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const pw    = document.getElementById('login-pw').value.trim();
+  const fe    = document.getElementById('field-email');
+  const fp    = document.getElementById('field-pw');
+  fe.classList.remove('error'); fp.classList.remove('error');
+
+  if (!email || !pw) {
+    if (!email) fe.classList.add('error');
+    if (!pw)    fp.classList.add('error');
+    showModal('error'); return;
+  }
+  if (email !== 'mahasiswa@ecampus.ut.ac.id' || pw !== 'password123') {
+    fe.classList.add('error'); fp.classList.add('error');
+    showModal('error');
+  } else {
+    showPage('page-dashboard');
+    updateClock();
+  }
+}
+
+function doLogout() {
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-pw').value = '';
+  showPage('page-login');
+}
+
+function showModal(t)  { document.getElementById('modal-'+t).classList.add('show'); }
+function closeModal(t) { document.getElementById('modal-'+t).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+});
+
+/* ── CLOCK & GREETING ── */
+function updateClock() {
+  const now  = new Date();
+  const hour = now.getHours();
+  const hh   = String(hour).padStart(2,'0');
+  const mm   = String(now.getMinutes()).padStart(2,'0');
+  const el   = document.getElementById('clockBadge');
+  if (el) el.textContent = hh + ':' + mm;
+  let greeting;
+  if      (hour >= 4  && hour < 11) greeting = 'Selamat Pagi';
+  else if (hour >= 11 && hour < 15) greeting = 'Selamat Siang';
+  else if (hour >= 15 && hour < 19) greeting = 'Selamat Sore';
+  else                               greeting = 'Selamat Malam';
+  const grEl = document.getElementById('heroGreeting');
+  if (grEl) grEl.textContent = greeting + ', Admin SITTA';
+}
+setInterval(updateClock, 1000);
+
+/* ── SIDEBAR ── */
+function sidebarActive(el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+function sidebarNav(label) {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().startsWith(label)) { n.classList.add('active'); }
+    else { n.classList.remove('active'); }
+  });
+}
+function toggleSub(el, id) {
+  const sub     = document.getElementById(id);
+  const chevron = el.querySelector('.chevron');
+  const isOpen  = sub.classList.contains('open');
+  sub.classList.toggle('open', !isOpen);
+  chevron.classList.toggle('open', !isOpen);
+  sidebarActive(el);
+}
+
+/* ── SECTION SWITCHER ── */
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
+
+/* ── LAPORAN ── */
+const tabMap = { monitoring:'tab-monitoring', rekap:'tab-rekap', histori:'tab-histori' };
+function openLaporan(type) {
+  showSection('sec-dashboard');
+  document.getElementById('laporanEmpty').style.display = 'none';
+  document.getElementById('laporanContent').style.display = 'block';
+  const targetId = tabMap[type] || 'tab-monitoring';
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(targetId).classList.add('show');
+  const labelMap = { 'tab-monitoring':'Monitoring', 'tab-rekap':'Rekap', 'tab-histori':'Histori' };
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    if (btn.textContent.includes(labelMap[targetId])) btn.classList.add('active');
+  });
+  setTimeout(() => document.getElementById('laporanContent').scrollIntoView({ behavior:'smooth', block:'start' }), 50);
+}
+function switchTab(btn, targetId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('show'));
+  btn.classList.add('active');
+  document.getElementById(targetId).classList.add('show');
+}
+
+/* ── TRACKING ── */
+var dataTracking = {
+  "2023001234": {
+    nomorDO:"2023001234", nama:"Rina Wulandari", status:"Dalam Perjalanan",
+    ekspedisi:"JNE", tanggalKirim:"2025-08-25", paket:"0JKT01", total:"Rp 180.000",
+    perjalanan:[
+      { waktu:"2025-08-25 10:12:20", keterangan:"Penerimaan di Loket: TANGERANG SELATAN. Pengirim: Universitas Terbuka" },
+      { waktu:"2025-08-25 14:07:56", keterangan:"Tiba di Hub: TANGERANG SELATAN" },
+      { waktu:"2025-08-25 10:12:20", keterangan:"Diteruskan ke Kantor Jakarta Selatan" }
+    ]
+  },
+  "2023005678": {
+    nomorDO:"2023005678", nama:"Agus Pranoto", status:"Dikirim",
+    ekspedisi:"Pos Indonesia", tanggalKirim:"2025-08-25", paket:"0UPBJJBDG", total:"Rp 220.000",
+    perjalanan:[
+      { waktu:"2025-08-25 10:12:20", keterangan:"Penerimaan di Loket: TANGERANG SELATAN. Pengirim: Universitas Terbuka" },
+      { waktu:"2025-08-25 14:07:56", keterangan:"Tiba di Hub: TANGERANG SELATAN" },
+      { waktu:"2025-08-25 16:30:10", keterangan:"Diteruskan ke Kantor Kota Bandung" },
+      { waktu:"2025-08-26 12:15:33", keterangan:"Tiba di Hub: Kota BANDUNG" },
+      { waktu:"2025-08-26 15:06:12", keterangan:"Proses antar ke Cimahi" },
+      { waktu:"2025-08-26 20:00:00", keterangan:"Selesai Antar. Penerima: Agus Pranoto" }
+    ]
+  }
+};
+
+function formatTgl(str) {
+  return new Date(str).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+}
+function cariTracking() {
+  var no    = document.getElementById('inputDO').value.trim();
+  var errEl = document.getElementById('errorBox');
+  var card  = document.getElementById('resultCard');
+  errEl.style.display = 'none';
+  card.style.display  = 'none';
+  if (!no) { errEl.textContent = '⚠ Masukkan nomor DO terlebih dahulu.'; errEl.style.display = 'block'; return; }
+  var d = dataTracking[no];
+  if (!d) { errEl.textContent = '⚠ Nomor DO tidak ditemukan. Periksa kembali.'; errEl.style.display = 'block'; return; }
+  var isOk       = d.status === 'Dikirim';
+  var badgeClass = isOk ? 'badge-ok-tr' : 'badge-warn-tr';
+  var tlHTML = d.perjalanan.map(function(p) {
+    return '<div class="tl-item"><div class="tl-dot"><div class="tl-dot-inner"></div></div>' +
+           '<div class="tl-time">' + p.waktu + '</div><div class="tl-desc">' + p.keterangan + '</div></div>';
+  }).join('');
+  card.innerHTML =
+    '<div class="result-stripe">' +
+      '<div><div class="do-lbl">Nomor DO</div><div class="do-num">' + d.nomorDO + '</div></div>' +
+      '<div class="tr-badge ' + badgeClass + '"><span class="badge-dot"></span>' + d.status + '</div>' +
+    '</div>' +
+    '<div class="info-row">' +
+      '<div class="info-cell"><div class="ic-lbl">Penerima</div><div class="ic-val">' + d.nama + '</div></div>' +
+      '<div class="info-cell"><div class="ic-lbl">Ekspedisi</div><div class="ic-val">' + d.ekspedisi + '</div></div>' +
+      '<div class="info-cell"><div class="ic-lbl">Tgl Kirim</div><div class="ic-val">' + formatTgl(d.tanggalKirim) + '</div></div>' +
+    '</div>' +
+    '<div class="tl-wrap"><div class="tl-head">Riwayat Pengiriman</div>' +
+      '<div class="timeline">' + tlHTML + '</div>' +
+    '</div>' +
+    '<div class="result-footer">' +
+      '<div class="paket-info"><span>Lokasi Paket</span>' + d.paket + '</div>' +
+      '<div class="total-info">' + d.total + '</div>' +
+    '</div>';
+  card.style.display = 'block';
+}
+function fillAndSearch(no) {
+  document.getElementById('inputDO').value = no;
+  cariTracking();
+}
+</script>
+</body>
+</html>

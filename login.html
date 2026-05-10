@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login – Universitas Terbuka</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #f5f5f5;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 44px 36px 36px;
+      width: 340px;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 32px;
+    }
+
+    .field {
+      display: flex;
+      align-items: center;
+      border-bottom: 1.5px solid #ddd;
+      padding: 8px 0;
+      margin-bottom: 20px;
+      transition: border-color .2s;
+    }
+    .field:focus-within { border-color: #e8a020; }
+    .field.error { border-color: #e05050; }
+
+    .field svg {
+      width: 18px; height: 18px;
+      color: #bbb;
+      flex-shrink: 0;
+      margin-right: 12px;
+    }
+
+    .field input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem;
+      color: #333;
+      background: transparent;
+    }
+    .field input::placeholder { color: #bbb; }
+
+    .forgot {
+      text-align: right;
+      margin-bottom: 28px;
+      margin-top: -8px;
+    }
+    .forgot a {
+      font-size: .82rem;
+      color: #e8a020;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .forgot a:hover { text-decoration: underline; }
+
+    .btn-masuk {
+      width: 100%;
+      padding: 14px;
+      background: #e8a020;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      letter-spacing: .3px;
+    }
+    .btn-masuk:hover { background: #d08a10; }
+    .btn-masuk:active { transform: scale(.98); }
+
+    .register-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .register-link a {
+      font-size: .85rem;
+      color: #e8a020;
+      text-decoration: none;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .register-link a:hover { text-decoration: underline; }
+
+    /* OVERLAY / MODAL */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.35);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99;
+    }
+    .overlay.show { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 36px 30px 28px;
+      width: 90%; max-width: 340px;
+      position: relative;
+      animation: pop .22s cubic-bezier(.34,1.56,.64,1);
+      box-shadow: 0 10px 40px rgba(0,0,0,.15);
+      text-align: center;
+    }
+    @keyframes pop { from{opacity:0;transform:scale(.85)} to{opacity:1;transform:scale(1)} }
+
+    .modal-close {
+      position: absolute; top:12px; right:16px;
+      background:none; border:none; font-size:1.3rem;
+      color:#aaa; cursor:pointer; line-height:1;
+    }
+    .modal-close:hover { color:#333; }
+
+    .modal-icon { font-size: 2.2rem; margin-bottom: 12px; }
+
+    .modal h3 {
+      font-size: 1.1rem; font-weight: 700;
+      color: #1a1a1a; margin-bottom: 8px;
+    }
+    .modal p {
+      font-size: .85rem; color: #888;
+      line-height: 1.6; margin-bottom: 22px;
+    }
+
+    .modal-field { text-align: left; margin-bottom: 14px; }
+    .modal-field label {
+      display:block; font-size:.75rem; font-weight:600;
+      color:#555; text-transform:uppercase; letter-spacing:.7px; margin-bottom:6px;
+    }
+    .modal-field input {
+      width:100%; padding:10px 12px;
+      border: 1.5px solid #ddd; border-radius:8px;
+      font-family:'Inter',sans-serif; font-size:.9rem;
+      color:#333; outline:none;
+      transition: border-color .2s;
+    }
+    .modal-field input:focus { border-color:#e8a020; }
+
+    .btn-modal {
+      width:100%; padding:12px;
+      background:#e8a020; color:#fff;
+      border:none; border-radius:9px;
+      font-family:'Inter',sans-serif; font-size:.95rem; font-weight:600;
+      cursor:pointer; transition:background .2s;
+    }
+    .btn-modal:hover { background:#d08a10; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Selamat Datang</h2>
+
+  <div class="field" id="field-email">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="4" width="20" height="16" rx="2"/>
+      <path d="M2 7l10 7 10-7"/>
+    </svg>
+    <input type="email" id="email" placeholder="Email"/>
+  </div>
+
+  <div class="field" id="field-pw">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="8" cy="15" r="4"/>
+      <path d="M12 11l8-8M18 6l2 2M15 9l2 2"/>
+    </svg>
+    <input type="password" id="password" placeholder="Password"/>
+  </div>
+
+  <div class="forgot">
+    <a onclick="showModal('lupa')">Lupa password ?</a>
+  </div>
+
+  <button class="btn-masuk" onclick="handleLogin()">Masuk</button>
+
+  <div class="register-link">
+    <a onclick="showModal('daftar')">Belum punya akun?</a>
+  </div>
+</div>
+
+<!-- MODAL ERROR -->
+<div class="overlay" id="modal-error">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('error')">×</button>
+    <div class="modal-icon">⚠️</div>
+    <h3>Login Gagal</h3>
+    <p>Email/password yang anda masukkan salah.<br/>Silakan periksa kembali.</p>
+    <button class="btn-modal" onclick="closeModal('error')">Coba Lagi</button>
+  </div>
+</div>
+
+<!-- MODAL LUPA PASSWORD -->
+<div class="overlay" id="modal-lupa">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('lupa')">×</button>
+    <div class="modal-icon">🔑</div>
+    <h3>Lupa Password</h3>
+    <p>Masukkan email terdaftar Anda. Kami akan mengirimkan tautan reset password.</p>
+    <div class="modal-field">
+      <label>Email</label>
+      <input type="email" placeholder="email@ecampus.ut.ac.id"/>
+    </div>
+    <button class="btn-modal" onclick="closeModal('lupa')">Kirim Tautan Reset</button>
+  </div>
+</div>
+
+<!-- MODAL DAFTAR -->
+<div class="overlay" id="modal-daftar">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('daftar')">×</button>
+    <div class="modal-icon">🎓</div>
+    <h3>Buat Akun Baru</h3>
+    <p>Lengkapi data berikut untuk mendaftar sebagai mahasiswa UT.</p>
+    <div class="modal-field">
+      <label>NIM</label>
+      <input type="text" placeholder="Nomor Induk Mahasiswa"/>
+    </div>
+    <div class="modal-field">
+      <label>Email</label>
+      <input type="email" placeholder="email@ecampus.ut.ac.id"/>
+    </div>
+    <div class="modal-field">
+      <label>Password</label>
+      <input type="password" placeholder="Buat password"/>
+    </div>
+    <button class="btn-modal" onclick="closeModal('daftar')">Daftar Sekarang</button>
+  </div>
+</div>
+
+<script>
+  function handleLogin() {
+    const email = document.getElementById('email').value.trim();
+    const pw    = document.getElementById('password').value.trim();
+    const fe    = document.getElementById('field-email');
+    const fp    = document.getElementById('field-pw');
+
+    fe.classList.remove('error');
+    fp.classList.remove('error');
+
+    if (!email || !pw) {
+      if (!email) fe.classList.add('error');
+      if (!pw)    fp.classList.add('error');
+      showModal('error');
+      return;
+    }
+
+    if (email !== 'mahasiswa@ecampus.ut.ac.id' || pw !== 'password123') {
+      fe.classList.add('error');
+      fp.classList.add('error');
+      showModal('error');
+    } else {
+      alert('Login berhasil! Selamat datang.');
+    }
+  }
+
+  function showModal(t)  { document.getElementById('modal-'+t).classList.add('show'); }
+  function closeModal(t) { document.getElementById('modal-'+t).classList.remove('show'); }
+
+  document.querySelectorAll('.overlay').forEach(o => {
+    o.addEventListener('click', e => { if (e.target === o) o.classList.remove('show'); });
+  });
+</script>
+</body>
+</html>

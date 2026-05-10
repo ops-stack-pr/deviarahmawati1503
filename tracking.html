@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SITTA — Tracking Pengiriman</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue-950: #0a1628;
+      --blue-900: #0f2040;
+      --blue-800: #1a3a6e;
+      --blue-700: #1e4d9b;
+      --blue-600: #2563eb;
+      --blue-500: #3b82f6;
+      --blue-400: #60a5fa;
+      --blue-300: #93c5fd;
+      --blue-100: #dbeafe;
+      --blue-50:  #eff6ff;
+      --white:    #ffffff;
+      --gray-50:  #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-400: #94a3b8;
+      --gray-600: #475569;
+      --success:  #16a34a;
+      --success-bg: #dcfce7;
+      --warn:     #d97706;
+      --warn-bg:  #fef3c7;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--blue-50);
+      color: var(--blue-950);
+      min-height: 100vh;
+    }
+
+    /* ─── TOP NAV ─── */
+    nav {
+      background: var(--blue-900);
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      box-shadow: 0 2px 16px rgba(15,32,64,.4);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 12px; }
+    .nav-logo {
+      width: 36px; height: 36px;
+      background: var(--blue-500);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; font-weight: 600; color: var(--white);
+    }
+    .nav-title { font-size: 15px; font-weight: 700; color: var(--white); }
+    .nav-sub { font-size: 11px; color: var(--blue-400); font-family: 'JetBrains Mono', monospace; }
+    .nav-right { font-size: 11px; color: var(--blue-300); font-family: 'JetBrains Mono', monospace; }
+    @media (max-width: 540px) { .nav-right { display: none; } }
+
+    /* ─── HERO ─── */
+    .hero {
+      background: linear-gradient(135deg, var(--blue-800) 0%, var(--blue-600) 60%, var(--blue-400) 100%);
+      padding: 52px 24px 80px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,.06) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255,255,255,.08) 0%, transparent 40%);
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -2px; left: 0; right: 0; height: 60px;
+      background: var(--blue-50);
+      clip-path: ellipse(55% 100% at 50% 100%);
+    }
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      color: var(--white);
+      font-size: 11px; font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 1.5px; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 20px;
+      margin-bottom: 18px; position: relative;
+    }
+    .hero h2 {
+      font-size: clamp(22px, 5vw, 36px);
+      font-weight: 800; color: var(--white);
+      letter-spacing: -1px; line-height: 1.15;
+      margin-bottom: 10px; position: relative;
+    }
+    .hero p {
+      font-size: 14px; color: rgba(255,255,255,.75);
+      max-width: 420px; margin: 0 auto; position: relative;
+    }
+
+    /* ─── MAIN ─── */
+    .main {
+      max-width: 720px;
+      margin: -32px auto 0;
+      padding: 0 20px 80px;
+      position: relative; z-index: 2;
+    }
+
+    /* ─── SEARCH CARD ─── */
+    .search-card {
+      background: var(--white);
+      border-radius: 20px; padding: 28px;
+      box-shadow: 0 4px 32px rgba(37,99,235,.12), 0 1px 4px rgba(0,0,0,.06);
+      margin-bottom: 24px;
+    }
+    .search-card h3 {
+      font-size: 12px; font-weight: 600; color: var(--blue-600);
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 14px;
+    }
+    .input-group { display: flex; gap: 10px; }
+    .input-wrap { flex: 1; position: relative; }
+    .input-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--gray-400); pointer-events: none;
+    }
+    .input-wrap input {
+      width: 100%;
+      background: var(--gray-50);
+      border: 1.5px solid var(--gray-200); border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px; color: var(--blue-950);
+      padding: 13px 16px 13px 42px; outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input:focus {
+      border-color: var(--blue-500);
+      box-shadow: 0 0 0 3px rgba(59,130,246,.15);
+      background: var(--white);
+    }
+    .input-wrap input::placeholder { color: var(--gray-400); }
+    .btn-lacak {
+      background: linear-gradient(135deg, var(--blue-600), var(--blue-800));
+      color: var(--white); border: none; border-radius: 10px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 700; font-size: 14px; padding: 13px 26px;
+      cursor: pointer; box-shadow: 0 4px 12px rgba(37,99,235,.35);
+      transition: all .2s; white-space: nowrap;
+    }
+    .btn-lacak:hover { box-shadow: 0 6px 20px rgba(37,99,235,.5); transform: translateY(-1px); }
+    .btn-lacak:active { transform: translateY(0); }
+    .quick-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .quick-lbl { font-size: 11px; color: var(--gray-400); font-family: 'JetBrains Mono', monospace; }
+    .chip {
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+      background: var(--blue-50); border: 1.5px solid var(--blue-100);
+      border-radius: 20px; padding: 4px 12px; color: var(--blue-600);
+      cursor: pointer; transition: all .2s;
+    }
+    .chip:hover { background: var(--blue-600); border-color: var(--blue-600); color: var(--white); }
+    .error-box {
+      display: none; background: #fef2f2; border: 1.5px solid #fecaca;
+      border-radius: 10px; padding: 11px 16px; color: #dc2626;
+      font-size: 13px; margin-top: 12px; font-weight: 500;
+    }
+
+    /* ─── RESULT ─── */
+    .result {
+      display: none; background: var(--white); border-radius: 20px;
+      box-shadow: 0 4px 32px rgba(37,99,235,.10), 0 1px 4px rgba(0,0,0,.05);
+      overflow: hidden;
+      animation: popIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(.97) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .result-stripe {
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-700) 100%);
+      padding: 24px 28px; display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    }
+    .do-lbl {
+      font-size: 10px; color: rgba(255,255,255,.55);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 5px;
+    }
+    .do-num {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px; font-weight: 600; color: var(--white); letter-spacing: 2px;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 8px 16px; border-radius: 20px;
+      font-size: 12px; font-weight: 700; align-self: center;
+    }
+    .badge .dot { width: 7px; height: 7px; border-radius: 50%; }
+    .badge-warn { background: var(--warn-bg); color: var(--warn); }
+    .badge-warn .dot { background: var(--warn); animation: blink .8s infinite; }
+    .badge-ok   { background: var(--success-bg); color: var(--success); }
+    .badge-ok .dot { background: var(--success); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    .info-row { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid var(--gray-100); }
+    @media (max-width: 480px) { .info-row { grid-template-columns: 1fr 1fr; } }
+    .info-cell { padding: 18px 22px; border-right: 1px solid var(--gray-100); }
+    .info-cell:last-child { border-right: none; }
+    .ic-lbl {
+      font-size: 10px; font-weight: 600; color: var(--blue-500);
+      text-transform: uppercase; letter-spacing: 1px;
+      font-family: 'JetBrains Mono', monospace; margin-bottom: 5px;
+    }
+    .ic-val { font-size: 14px; font-weight: 600; color: var(--blue-900); }
+
+    /* ─── TIMELINE ─── */
+    .tl-wrap { padding: 26px 28px; }
+    .tl-head {
+      font-size: 11px; font-weight: 600; color: var(--blue-500);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 24px; display: flex; align-items: center; gap: 10px;
+    }
+    .tl-head::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, var(--blue-100), transparent);
+    }
+    .timeline { position: relative; padding-left: 32px; }
+    .timeline::before {
+      content: ''; position: absolute; left: 9px; top: 12px; bottom: 12px;
+      width: 2px; background: linear-gradient(to bottom, var(--blue-500), var(--blue-100));
+      border-radius: 2px;
+    }
+    .tl-item { position: relative; margin-bottom: 22px; animation: fadeSlide .35s ease both; }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-dot {
+      position: absolute; left: -32px; top: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--white); border: 2px solid var(--blue-200);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tl-dot-inner { width: 8px; height: 8px; border-radius: 50%; background: var(--blue-200); }
+    .tl-item:first-child .tl-dot { border-color: var(--blue-500); box-shadow: 0 0 0 4px rgba(59,130,246,.15); }
+    .tl-item:first-child .tl-dot-inner { background: var(--blue-500); }
+    .tl-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--blue-400); margin-bottom: 3px; }
+    .tl-desc { font-size: 13px; font-weight: 500; color: var(--blue-900); line-height: 1.5; }
+    .tl-item:first-child .tl-desc { color: var(--blue-700); font-weight: 700; }
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    .tl-item:nth-child(1){animation-delay:.04s}
+    .tl-item:nth-child(2){animation-delay:.10s}
+    .tl-item:nth-child(3){animation-delay:.17s}
+    .tl-item:nth-child(4){animation-delay:.24s}
+    .tl-item:nth-child(5){animation-delay:.31s}
+    .tl-item:nth-child(6){animation-delay:.38s}
+
+    /* ─── FOOTER ─── */
+    .result-footer {
+      background: var(--blue-50); border-top: 1.5px solid var(--blue-100);
+      padding: 16px 28px; display: flex; align-items: center;
+      justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    }
+    .paket-info { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--blue-700); font-weight: 600; }
+    .paket-info span { color: var(--gray-400); font-weight: 400; margin-right: 6px; }
+    .total-info { font-size: 16px; font-weight: 800; color: var(--blue-800); }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">
+    <div class="nav-logo">UT</div>
+    <div>
+      <div class="nav-title">SITTA</div>
+      <div class="nav-sub">Universitas Terbuka</div>
+    </div>
+  </div>
+  <div class="nav-right">Sistem Informasi Tata Kelola Bahan Ajar</div>
+</nav>
+
+<div class="hero">
+  <div class="hero-eyebrow">Tracking Pengiriman</div>
+  <h2>Lacak Paket Bahan Ajar<br>Anda Secara Real-Time</h2>
+  <p>Masukkan nomor Delivery Order untuk melihat status dan riwayat pengiriman paket Anda.</p>
+</div>
+
+<div class="main">
+  <div class="search-card">
+    <h3>Nomor Delivery Order</h3>
+    <div class="input-group">
+      <div class="input-wrap">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+        <input type="text" id="inputDO" placeholder="Contoh: 2023001234" />
+      </div>
+      <button class="btn-lacak" onclick="cariTracking()">Lacak</button>
+    </div>
+    <div class="quick-row">
+      <span class="quick-lbl">Coba:</span>
+      <span class="chip" onclick="fillAndSearch('2023001234')">2023001234</span>
+      <span class="chip" onclick="fillAndSearch('2023005678')">2023005678</span>
+    </div>
+    <div class="error-box" id="errorBox"></div>
+  </div>
+  <div class="result" id="resultCard"></div>
+</div>
+
+<script>
+var dataTracking = {
+  "2023001234": {
+    nomorDO: "2023001234", nama: "Rina Wulandari", status: "Dalam Perjalanan",
+    ekspedisi: "JNE", tanggalKirim: "2025-08-25", paket: "0JKT01", total: "Rp 180.000",
+    perjalanan: [
+      { waktu: "2025-08-25 10:12:20", keterangan: "Penerimaan di Loket: TANGERANG SELATAN. Pengirim: Universitas Terbuka" },
+      { waktu: "2025-08-25 14:07:56", keterangan: "Tiba di Hub: TANGERANG SELATAN" },
+      { waktu: "2025-08-25 10:12:20", keterangan: "Diteruskan ke Kantor Jakarta Selatan" }
+    ]
+  },
+  "2023005678": {
+    nomorDO: "2023005678", nama: "Agus Pranoto", status: "Dikirim",
+    ekspedisi: "Pos Indonesia", tanggalKirim: "2025-08-25", paket: "0UPBJJBDG", total: "Rp 220.000",
+    perjalanan: [
+      { waktu: "2025-08-25 10:12:20", keterangan: "Penerimaan di Loket: TANGERANG SELATAN. Pengirim: Universitas Terbuka" },
+      { waktu: "2025-08-25 14:07:56", keterangan: "Tiba di Hub: TANGERANG SELATAN" },
+      { waktu: "2025-08-25 16:30:10", keterangan: "Diteruskan ke Kantor Kota Bandung" },
+      { waktu: "2025-08-26 12:15:33", keterangan: "Tiba di Hub: Kota BANDUNG" },
+      { waktu: "2025-08-26 15:06:12", keterangan: "Proses antar ke Cimahi" },
+      { waktu: "2025-08-26 20:00:00", keterangan: "Selesai Antar. Penerima: Agus Pranoto" }
+    ]
+  }
+};
+
+function formatTgl(str) {
+  var d = new Date(str);
+  return d.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+}
+
+function cariTracking() {
+  var no = document.getElementById('inputDO').value.trim();
+  var errEl = document.getElementById('errorBox');
+  var card  = document.getElementById('resultCard');
+  errEl.style.display = 'none';
+  card.style.display  = 'none';
+  if (!no) { errEl.textContent = '⚠ Masukkan nomor DO terlebih dahulu.'; errEl.style.display = 'block'; return; }
+  var d = dataTracking[no];
+  if (!d) { errEl.textContent = '⚠ Nomor DO tidak ditemukan. Periksa kembali nomor yang Anda masukkan.'; errEl.style.display = 'block'; return; }
+  var badgeClass = d.status === "Dikirim" ? 'badge-ok' : 'badge-warn';
+  var tlHTML = d.perjalanan.map(function(p) {
+    return '<div class="tl-item"><div class="tl-dot"><div class="tl-dot-inner"></div></div>' +
+      '<div class="tl-time">' + p.waktu + '</div><div class="tl-desc">' + p.keterangan + '</div></div>';
+  }).join('');
+  card.innerHTML =
+    '<div class="result-stripe"><div><div class="do-lbl">Nomor DO</div><div class="do-num">' + d.nomorDO + '</div></div>' +
+    '<div class="badge ' + badgeClass + '"><span class="dot"></span>' + d.status + '</div></div>' +
+    '<div class="info-row">' +
+    '<div class="info-cell"><div class="ic-lbl">Penerima</div><div class="ic-val">' + d.nama + '</div></div>' +
+    '<div class="info-cell"><div class="ic-lbl">Ekspedisi</div><div class="ic-val">' + d.ekspedisi + '</div></div>' +
+    '<div class="info-cell"><div class="ic-lbl">Tgl Kirim</div><div class="ic-val">' + formatTgl(d.tanggalKirim) + '</div></div>' +
+    '</div><div class="tl-wrap"><div class="tl-head">Riwayat Pengiriman</div>' +
+    '<div class="timeline">' + tlHTML + '</div></div>' +
+    '<div class="result-footer"><div class="paket-info"><span>Paket Lokasi</span>' + d.paket + '</div>' +
+    '<div class="total-info">' + d.total + '</div></div>';
+  card.style.display = 'block';
+}
+
+function fillAndSearch(no) {
+  document.getElementById('inputDO').value = no;
+  cariTracking();
+}
+
+document.getElementById('inputDO').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') cariTracking();
+});
+</script>
+</body>
+</html>
